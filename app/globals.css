@@ -58,17 +58,20 @@
   }
 }
 
+/* Simple fade-in used by a few overlays */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
-
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Utility: horizontally scrollable areas with hidden scrollbar */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* smooth & reliable horizontal scroll on iOS */
+.hscroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
