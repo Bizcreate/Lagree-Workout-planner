@@ -1,16 +1,20 @@
+// components/my-workouts.tsx
 "use client"
 
 import { useState } from "react"
 import { Clock, PlayCircle, Search, Trash2, Info } from "lucide-react"
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { WorkoutPresentation } from "@/components/workout-presentation"
+
 import { useSavedWorkoutsStore } from "@/lib/saved-workouts-store"
 import { useWorkoutStore } from "@/lib/store"
 import type { SavedWorkout, WorkoutExercise } from "@/lib/types"
+
 import {
   Dialog,
   DialogContent,
@@ -20,20 +24,44 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+/** Ensure older saved items have the fields our planner/presentation expect */
+function normalizeExercises(list: WorkoutExercise[]): WorkoutExercise[] {
+  return list.map((e, i) => ({
+    ...e,
+    id: e.id ?? `${e.name}-${i}`,
+    position: e.position ?? "standard",
+    timeInSeconds: e.timeInSeconds ?? 0,
+  }))
+}
+
 export function MyWorkouts() {
   const { savedWorkouts, deleteWorkout } = useSavedWorkoutsStore()
-  const { setWorkoutPlan } = useWorkoutStore()
+  const { addExerciseToWorkout, clearWorkout } = useWorkoutStore()
+
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedWorkout, setSelectedWorkout] = useState<SavedWorkout | null>(null)
   const [isViewWorkoutOpen, setIsViewWorkoutOpen] = useState(false)
   const [isPresentationMode, setIsPresentationMode] = useState(false)
 
-  const filteredWorkouts = savedWorkouts.filter((workout) =>
-    workout.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredWorkouts = savedWorkouts.filter((w) =>
+    w.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  /** Replace current planner contents with these exercises */
+  const replacePlan = (exs: WorkoutExercise[]) => {
+    const normalized = normalizeExercises(exs)
+    clearWorkout()
+    normalized.forEach((ex) => {
+      // Store accepts the workout item shape; we pass through fields we have
+      addExerciseToWorkout({
+        ...ex,
+        position: ex.position ?? "standard",
+      })
+    })
+  }
+
   const handleStartWorkout = (workout: SavedWorkout) => {
-    setWorkoutPlan(workout.exercises)
+    replacePlan(workout.exercises)
     setIsPresentationMode(true)
   }
 
@@ -43,22 +71,16 @@ export function MyWorkouts() {
   }
 
   const handleLoadWorkout = (workout: SavedWorkout) => {
-    setWorkoutPlan(workout.exercises)
+    replacePlan(workout.exercises)
     setIsViewWorkoutOpen(false)
   }
 
-  // Calculate total time for a workout
-  const calculateTotalTime = (exercises: WorkoutExercise[]) => {
-    return exercises.reduce((total, exercise) => {
-      // Special instructions don't add to the time
-      if (exercise.name === "Change Sides" || exercise.name === "Repeat on Other Side") {
-        return total
-      }
-      return total + (exercise.timeInSeconds || 0)
+  const calculateTotalTime = (exs: WorkoutExercise[]) =>
+    exs.reduce((total, ex) => {
+      if (ex.name === "Change Sides" || ex.name === "Repeat on Other Side") return total
+      return total + (ex.timeInSeconds || 0)
     }, 0)
-  }
 
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -86,12 +108,12 @@ export function MyWorkouts() {
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             </div>
           </CardHeader>
+
           <CardContent>
             {filteredWorkouts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredWorkouts.map((workout) => {
                   const totalTime = calculateTotalTime(workout.exercises)
-                  const exerciseCount = workout.exercises.length
                   const regularExerciseCount = workout.exercises.filter(
                     (ex) => ex.name !== "Change Sides" && ex.name !== "Repeat on Other Side",
                   ).length
@@ -100,8 +122,11 @@ export function MyWorkouts() {
                     <Card key={workout.id} className="hover:border-primary/50 transition-colors">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{workout.name}</CardTitle>
-                        <CardDescription>Created on {new Date(workout.createdAt).toLocaleDateString()}</CardDescription>
+                        <CardDescription>
+                          Created on {new Date(workout.createdAt).toLocaleDateString()}
+                        </CardDescription>
                       </CardHeader>
+
                       <CardContent className="pb-2">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -120,6 +145,7 @@ export function MyWorkouts() {
                           {regularExerciseCount > 3 ? ` and ${regularExerciseCount - 3} more...` : ""}
                         </p>
                       </CardContent>
+
                       <CardFooter className="pt-2">
                         <div className="flex gap-2 w-full">
                           <Button
@@ -164,10 +190,12 @@ export function MyWorkouts() {
           <DialogHeader>
             <DialogTitle>{selectedWorkout?.name}</DialogTitle>
             <DialogDescription>
-              Created on {selectedWorkout && new Date(selectedWorkout.createdAt).toLocaleDateString()} • Total time:{" "}
+              Created on{" "}
+              {selectedWorkout && new Date(selectedWorkout.createdAt).toLocaleDateString()} • Total time:{" "}
               {selectedWorkout && formatTime(calculateTotalTime(selectedWorkout.exercises))}
             </DialogDescription>
           </DialogHeader>
+
           <div className="py-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Exercises</h3>
@@ -184,30 +212,31 @@ export function MyWorkouts() {
             <ScrollArea className="h-[400px] pr-4">
               <div className="space-y-4">
                 {selectedWorkout?.exercises.map((exercise, index) => {
-                  const isSpecialInstruction =
+                  const isInstruction =
                     exercise.name === "Change Sides" || exercise.name === "Repeat on Other Side"
 
                   return (
                     <div
-                      key={`${exercise.id}-${index}`}
-                      className={`border rounded-md p-4 ${isSpecialInstruction ? "bg-muted/50 border-dashed" : ""}`}
+                      key={`${exercise.id ?? exercise.name}-${index}`}
+                      className={`border rounded-md p-4 ${isInstruction ? "bg-muted/50 border-dashed" : ""}`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground font-mono">{index + 1}</span>
                           <h4 className="font-medium">{exercise.name}</h4>
                         </div>
-                        {!isSpecialInstruction && (
+
+                        {!isInstruction && (
                           <div className="flex items-center gap-2">
-                            {exercise.timeInSeconds && (
+                            {exercise.timeInSeconds != null && (
                               <Badge variant="secondary">{formatTime(exercise.timeInSeconds)}</Badge>
                             )}
-                            {exercise.reps && <Badge variant="outline">{exercise.reps} reps</Badge>}
+                            {exercise.reps != null && <Badge variant="outline">{exercise.reps} reps</Badge>}
                           </div>
                         )}
                       </div>
 
-                      {!isSpecialInstruction ? (
+                      {!isInstruction ? (
                         <>
                           {exercise.muscleGroups && exercise.muscleGroups.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
@@ -218,9 +247,7 @@ export function MyWorkouts() {
                               ))}
                             </div>
                           )}
-
                           {exercise.notes && <p className="text-sm text-muted-foreground mt-2">{exercise.notes}</p>}
-
                           {exercise.intensity && (
                             <p className="text-xs text-muted-foreground mt-2 capitalize">
                               Intensity: {exercise.intensity}
@@ -236,6 +263,7 @@ export function MyWorkouts() {
               </div>
             </ScrollArea>
           </div>
+
           <DialogFooter className="flex justify-between items-center">
             <Button
               variant="destructive"

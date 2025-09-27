@@ -1,55 +1,54 @@
-"use client"
-
+// lib/store.ts
 import { create } from "zustand"
-import type { Exercise, WorkoutExercise } from "./types"
+import { persist } from "zustand/middleware"
+import type { WorkoutExercise } from "./types"
 
-interface WorkoutStore {
+type State = {
   workoutPlan: WorkoutExercise[]
-  addExerciseToWorkout: (exercise: Exercise) => void
-  updateExerciseParams: (index: number, updatedExercise: WorkoutExercise) => void
-  removeExerciseFromWorkout: (index: number) => void
-  clearWorkout: () => void
-  reorderExercises: (sourceIndex: number, targetIndex: number) => void
-  setWorkoutPlan: (exercises: WorkoutExercise[]) => void
 }
 
-// Create store without persistence to avoid storage issues
-export const useWorkoutStore = create<WorkoutStore>((set) => ({
-  workoutPlan: [],
+type Actions = {
+  /** Replace the whole plan (used when starting a saved workout) */
+  setWorkoutPlan: (plan: WorkoutExercise[]) => void
+  addExerciseToWorkout: (ex: WorkoutExercise) => void
+  removeExerciseFromWorkout: (index: number) => void
+  clearWorkout: () => void
+  reorderExercises: (from: number, to: number) => void
+  updateExerciseParams: (index: number, updates: Partial<WorkoutExercise>) => void
+}
 
-  addExerciseToWorkout: (exercise) =>
-    set((state) => ({
-      workoutPlan: [
-        ...state.workoutPlan,
-        {
-          ...exercise,
-          timeInSeconds: 60,
-          reps: 10,
-          intensity: "medium",
-          notes: "",
-        },
-      ],
-    })),
+export const useWorkoutStore = create<State & Actions>()(
+  persist(
+    (set, get) => ({
+      workoutPlan: [],
 
-  updateExerciseParams: (index, updatedExercise) =>
-    set((state) => ({
-      workoutPlan: state.workoutPlan.map((exercise, i) => (i === index ? updatedExercise : exercise)),
-    })),
+      setWorkoutPlan: (plan) => set({ workoutPlan: plan }),
 
-  removeExerciseFromWorkout: (index) =>
-    set((state) => ({
-      workoutPlan: state.workoutPlan.filter((_, i) => i !== index),
-    })),
+      addExerciseToWorkout: (ex) =>
+        set((s) => ({ workoutPlan: [...s.workoutPlan, ex] })),
 
-  clearWorkout: () => set({ workoutPlan: [] }),
+      removeExerciseFromWorkout: (index) =>
+        set((s) => ({
+          workoutPlan: s.workoutPlan.filter((_, i) => i !== index),
+        })),
 
-  reorderExercises: (sourceIndex, targetIndex) =>
-    set((state) => {
-      const newWorkoutPlan = [...state.workoutPlan]
-      const [movedItem] = newWorkoutPlan.splice(sourceIndex, 1)
-      newWorkoutPlan.splice(targetIndex, 0, movedItem)
-      return { workoutPlan: newWorkoutPlan }
+      clearWorkout: () => set({ workoutPlan: [] }),
+
+      reorderExercises: (from, to) =>
+        set((s) => {
+          const copy = s.workoutPlan.slice()
+          const [moved] = copy.splice(from, 1)
+          copy.splice(to, 0, moved)
+          return { workoutPlan: copy }
+        }),
+
+      updateExerciseParams: (index, updates) =>
+        set((s) => {
+          const copy = s.workoutPlan.slice()
+          copy[index] = { ...copy[index], ...updates }
+          return { workoutPlan: copy }
+        }),
     }),
-
-  setWorkoutPlan: (exercises) => set({ workoutPlan: exercises }),
-}))
+    { name: "workout-store" }
+  )
+)

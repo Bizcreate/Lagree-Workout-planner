@@ -1,3 +1,5 @@
+import type { Positioning } from "./positions"
+
 export interface Exercise {
   id: string
   name: string
@@ -8,36 +10,16 @@ export interface Exercise {
 export interface WorkoutExercise extends Exercise {
   timeInSeconds?: number
   reps?: number
-  intensity?: string
+  intensity?: "low" | "medium" | "high"
   notes?: string
-}
-
-export interface WorkoutPlan {
-  name: string
-  exercises: WorkoutExercise[]
-  createdAt: string
-}
-
-export interface ScheduledWorkout {
-  id: string
-  date: Date
-  workoutName: string
-  notes?: string
-  duration: number
-  workoutPlan?: WorkoutExercise[]
-}
-
-export interface Note {
-  id: string
-  title: string
-  content: string
-  category: string
-  createdAt: Date
+  /** New: machine position (L1–L4 presets) */
+  position?: Positioning
 }
 
 export interface SavedWorkout {
   id: string
   name: string
+  createdAt: number
   exercises: WorkoutExercise[]
-  createdAt: string
 }
+
