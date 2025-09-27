@@ -36,7 +36,8 @@ function normalizeExercises(list: WorkoutExercise[]): WorkoutExercise[] {
 
 export function MyWorkouts() {
   const { savedWorkouts, deleteWorkout } = useSavedWorkoutsStore()
-  const { addExerciseToWorkout, clearWorkout } = useWorkoutStore()
+  // type as any to avoid runtime “is not a function” if your store APIs vary between branches
+  const workout = useWorkoutStore() as any
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedWorkout, setSelectedWorkout] = useState<SavedWorkout | null>(null)
@@ -47,31 +48,18 @@ export function MyWorkouts() {
     w.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  /** Replace current planner contents with these exercises */
-  const replacePlan = (exs: WorkoutExercise[]) => {
-    const normalized = normalizeExercises(exs)
-    clearWorkout()
-    normalized.forEach((ex) => {
-      // Store accepts the workout item shape; we pass through fields we have
-      addExerciseToWorkout({
-        ...ex,
-        position: ex.position ?? "standard",
-      })
-    })
-  }
-
-  const handleStartWorkout = (workout: SavedWorkout) => {
-    replacePlan(workout.exercises)
+  const handleStartWorkout = (workoutToStart: SavedWorkout) => {
+    workout?.setWorkoutPlan?.(normalizeExercises(workoutToStart.exercises))
     setIsPresentationMode(true)
   }
 
-  const handleViewWorkout = (workout: SavedWorkout) => {
-    setSelectedWorkout(workout)
+  const handleViewWorkout = (w: SavedWorkout) => {
+    setSelectedWorkout(w)
     setIsViewWorkoutOpen(true)
   }
 
-  const handleLoadWorkout = (workout: SavedWorkout) => {
-    replacePlan(workout.exercises)
+  const handleLoadWorkout = (w: SavedWorkout) => {
+    workout?.setWorkoutPlan?.(normalizeExercises(w.exercises))
     setIsViewWorkoutOpen(false)
   }
 
@@ -93,7 +81,7 @@ export function MyWorkouts() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>My Saved Workouts</CardTitle>
+              <CardTitle className="text-base sm:text-lg">My Saved Workouts</CardTitle>
               <CardDescription>
                 {savedWorkouts.length} {savedWorkouts.length === 1 ? "workout" : "workouts"} saved
               </CardDescription>
@@ -112,19 +100,17 @@ export function MyWorkouts() {
           <CardContent>
             {filteredWorkouts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredWorkouts.map((workout) => {
-                  const totalTime = calculateTotalTime(workout.exercises)
-                  const regularExerciseCount = workout.exercises.filter(
+                {filteredWorkouts.map((w) => {
+                  const totalTime = calculateTotalTime(w.exercises)
+                  const regularCount = w.exercises.filter(
                     (ex) => ex.name !== "Change Sides" && ex.name !== "Repeat on Other Side",
                   ).length
 
                   return (
-                    <Card key={workout.id} className="hover:border-primary/50 transition-colors">
+                    <Card key={w.id} className="hover:border-primary/50 transition-colors">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{workout.name}</CardTitle>
-                        <CardDescription>
-                          Created on {new Date(workout.createdAt).toLocaleDateString()}
-                        </CardDescription>
+                        <CardTitle className="text-lg">{w.name}</CardTitle>
+                        <CardDescription>Created on {new Date(w.createdAt).toLocaleDateString()}</CardDescription>
                       </CardHeader>
 
                       <CardContent className="pb-2">
@@ -132,37 +118,27 @@ export function MyWorkouts() {
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">{formatTime(totalTime)}</span>
                           <Badge variant="outline" className="ml-auto">
-                            {regularExerciseCount} exercises
+                            {regularCount} exercises
                           </Badge>
                         </div>
 
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {workout.exercises
+                          {w.exercises
                             .filter((ex) => ex.name !== "Change Sides" && ex.name !== "Repeat on Other Side")
                             .slice(0, 3)
                             .map((ex) => ex.name)
                             .join(", ")}
-                          {regularExerciseCount > 3 ? ` and ${regularExerciseCount - 3} more...` : ""}
+                          {regularCount > 3 ? ` and ${regularCount - 3} more...` : ""}
                         </p>
                       </CardContent>
 
                       <CardFooter className="pt-2">
                         <div className="flex gap-2 w-full">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => handleViewWorkout(workout)}
-                          >
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewWorkout(w)}>
                             <Info className="h-4 w-4 mr-2" />
                             Details
                           </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="flex-1"
-                            onClick={() => handleStartWorkout(workout)}
-                          >
+                          <Button variant="default" size="sm" className="flex-1" onClick={() => handleStartWorkout(w)}>
                             <PlayCircle className="h-4 w-4 mr-2" />
                             Start
                           </Button>
@@ -176,7 +152,7 @@ export function MyWorkouts() {
               <div className="text-center py-12">
                 <p className="text-muted-foreground mb-2">No saved workouts found</p>
                 <p className="text-sm text-muted-foreground">
-                  {searchTerm ? "Try a different search term" : "Create and save workouts in the Workout Planner tab"}
+                  {searchTerm ? "Try a different search term" : "Create and save workouts in the Planner tab"}
                 </p>
               </div>
             )}
@@ -190,8 +166,7 @@ export function MyWorkouts() {
           <DialogHeader>
             <DialogTitle>{selectedWorkout?.name}</DialogTitle>
             <DialogDescription>
-              Created on{" "}
-              {selectedWorkout && new Date(selectedWorkout.createdAt).toLocaleDateString()} • Total time:{" "}
+              Created on {selectedWorkout && new Date(selectedWorkout.createdAt).toLocaleDateString()} • Total time:{" "}
               {selectedWorkout && formatTime(calculateTotalTime(selectedWorkout.exercises))}
             </DialogDescription>
           </DialogHeader>
@@ -229,7 +204,10 @@ export function MyWorkouts() {
                         {!isInstruction && (
                           <div className="flex items-center gap-2">
                             {exercise.timeInSeconds != null && (
-                              <Badge variant="secondary">{formatTime(exercise.timeInSeconds)}</Badge>
+                              <Badge variant="secondary">
+                                {Math.floor((exercise.timeInSeconds || 0) / 60)}:
+                                {((exercise.timeInSeconds || 0) % 60).toString().padStart(2, "0")}
+                              </Badge>
                             )}
                             {exercise.reps != null && <Badge variant="outline">{exercise.reps} reps</Badge>}
                           </div>
