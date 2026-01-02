@@ -22,4 +22,3 @@ export interface SavedWorkout {
   createdAt: number
   exercises: WorkoutExercise[]
 }
-

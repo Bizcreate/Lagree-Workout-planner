@@ -63,4 +63,3 @@ export function positionBadge(pos?: Positioning) {
 export function positionShort(pos?: Positioning) {
   return POSITIONS[pos ?? "standard"].short
 }
-

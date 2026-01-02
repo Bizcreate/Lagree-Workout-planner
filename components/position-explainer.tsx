@@ -69,4 +69,3 @@ function MiniMachineDiagram({ platform, facing }: { platform: "front" | "back"; 
     </svg>
   )
 }
-

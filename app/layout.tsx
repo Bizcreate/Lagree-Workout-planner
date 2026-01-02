@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export const metadata = {
   title: "Lagree Sequencing Planner",
   description: "Plan Lagree class blocks and exercises quickly.",
+    generator: 'v0.app'
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
