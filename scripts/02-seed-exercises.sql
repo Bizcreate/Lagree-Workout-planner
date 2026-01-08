@@ -53,7 +53,7 @@ INSERT INTO exercises (name, description, muscle_groups, series, unilateral, def
 ('Side Leg Lift', 'Standing with leg lifting to side', ARRAY['obliques', 'glutes'], 'Obliques', true, 45, ARRAY['Megaformer'], 'beginner'),
 
 -- Full Body
-('Burpee', 'Jump to plank, return to standing', ARRAY['full'], 'Full Body', false, 60, ARRAY['Megaformer'], 'advanced'),
+-- Removed Burpee exercise as requested by user
 ('Mountain Climber', 'Plank with alternating knee drives', ARRAY['full'], 'Full Body', false, 60, ARRAY['Megaformer'], 'intermediate'),
 ('Plank Jacks', 'Plank with legs jumping in and out', ARRAY['full'], 'Full Body', false, 45, ARRAY['Megaformer'], 'intermediate'),
 ('Spider Lunge', 'Lunge with rotation and reach', ARRAY['full'], 'Full Body', true, 60, ARRAY['Megaformer'], 'advanced'),

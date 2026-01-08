@@ -1,8 +1,15 @@
+-- Drop all existing tables in the correct order (respecting foreign key constraints)
+DROP TABLE IF EXISTS workout_history CASCADE;
+DROP TABLE IF EXISTS workout_exercises CASCADE;
+DROP TABLE IF EXISTS workouts CASCADE;
+DROP TABLE IF EXISTS exercises CASCADE;
+DROP TABLE IF EXISTS user_profiles CASCADE;
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Exercises table
-CREATE TABLE IF NOT EXISTS exercises (
+CREATE TABLE exercises (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT,
@@ -21,7 +28,7 @@ CREATE TABLE IF NOT EXISTS exercises (
 );
 
 -- Workouts table
-CREATE TABLE IF NOT EXISTS workouts (
+CREATE TABLE workouts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   description TEXT,
@@ -31,9 +38,8 @@ CREATE TABLE IF NOT EXISTS workouts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Updated workout_exercises schema to match component expectations
--- Workout exercises junction table with denormalized exercise data for easier querying
-CREATE TABLE IF NOT EXISTS workout_exercises (
+-- Workout exercises junction table with denormalized exercise data
+CREATE TABLE workout_exercises (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workout_id UUID REFERENCES workouts(id) ON DELETE CASCADE,
   exercise_id UUID REFERENCES exercises(id) ON DELETE CASCADE,
@@ -50,8 +56,8 @@ CREATE TABLE IF NOT EXISTS workout_exercises (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- User profiles table (optional for future auth)
-CREATE TABLE IF NOT EXISTS user_profiles (
+-- User profiles table
+CREATE TABLE user_profiles (
   id UUID PRIMARY KEY,
   email TEXT UNIQUE,
   full_name TEXT,
@@ -60,7 +66,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 );
 
 -- Workout history table
-CREATE TABLE IF NOT EXISTS workout_history (
+CREATE TABLE workout_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workout_id UUID REFERENCES workouts(id) ON DELETE SET NULL,
   user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
@@ -70,9 +76,9 @@ CREATE TABLE IF NOT EXISTS workout_history (
 );
 
 -- Indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_exercises_muscle_groups ON exercises USING GIN (muscle_groups);
-CREATE INDEX IF NOT EXISTS idx_exercises_series ON exercises(series);
-CREATE INDEX IF NOT EXISTS idx_workout_exercises_workout ON workout_exercises(workout_id);
-CREATE INDEX IF NOT EXISTS idx_workout_exercises_position ON workout_exercises(workout_id, sequence_order);
-CREATE INDEX IF NOT EXISTS idx_workouts_preset ON workouts(is_preset);
-CREATE INDEX IF NOT EXISTS idx_workout_history_user ON workout_history(user_id);
+CREATE INDEX idx_exercises_muscle_groups ON exercises USING GIN (muscle_groups);
+CREATE INDEX idx_exercises_series ON exercises(series);
+CREATE INDEX idx_workout_exercises_workout ON workout_exercises(workout_id);
+CREATE INDEX idx_workout_exercises_position ON workout_exercises(workout_id, sequence_order);
+CREATE INDEX idx_workouts_preset ON workouts(is_preset);
+CREATE INDEX idx_workout_history_user ON workout_history(user_id);

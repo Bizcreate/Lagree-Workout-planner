@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Clock, PlayCircle, Search, Trash2, Info, Database } from "lucide-react"
+import { Clock, PlayCircle, Search, Trash2, Info, Database, AlertCircle } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -83,10 +83,14 @@ export function MyWorkouts() {
   const [isPresentationMode, setIsPresentationMode] = useState(false)
   const [presetWorkouts, setPresetWorkouts] = useState<SavedWorkout[]>([])
   const [isLoadingPresets, setIsLoadingPresets] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchPresetWorkouts() {
       console.log("[v0] Fetching preset workouts from Supabase...")
+      console.log("[v0] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log("[v0] Supabase Key exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
       try {
         const { data, error } = await supabase
           .from("workouts")
@@ -112,7 +116,8 @@ export function MyWorkouts() {
           .order("created_at", { ascending: false })
 
         if (error) {
-          console.error("[v0] Error fetching preset workouts:", error)
+          console.error("[v0] Supabase error:", error)
+          setError(`Database error: ${error.message}`)
           return
         }
 
@@ -124,6 +129,7 @@ export function MyWorkouts() {
         }
       } catch (err) {
         console.error("[v0] Exception fetching presets:", err)
+        setError(err instanceof Error ? err.message : "Failed to connect to database")
       } finally {
         setIsLoadingPresets(false)
       }
@@ -253,6 +259,19 @@ export function MyWorkouts() {
           </CardHeader>
 
           <CardContent>
+            {error && (
+              <div className="mb-4 p-4 border border-destructive/50 bg-destructive/10 rounded-lg flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-destructive">Database Connection Error</p>
+                  <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Make sure you've added environment variables and run the SQL scripts in Supabase.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <Tabs defaultValue="presets" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="presets" className="flex items-center gap-2">
@@ -364,6 +383,7 @@ export function MyWorkouts() {
                             </div>
                           )}
                           {exercise.notes && <p className="text-sm text-muted-foreground mt-2">{exercise.notes}</p>}
+                          {/* Added intensity display */}
                           {exercise.intensity && (
                             <p className="text-xs text-muted-foreground mt-2 capitalize">
                               Intensity: {exercise.intensity}

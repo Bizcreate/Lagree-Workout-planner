@@ -41,72 +41,74 @@ BEGIN
   SELECT id INTO ex_pulling FROM exercises WHERE name = 'Pulling Straps' LIMIT 1;
 
   -- Add exercises to workout with timing
+  -- Fixed column names to match schema: position -> sequence_order, hold_sec -> holds, removed pulses column
+  
   -- Warm-up: Lunge (Right)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, side)
-  VALUES (workout_id, ex_lunge, 1, 60, 'right');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, side)
+  VALUES (workout_id, ex_lunge, 'Lunge', 'Standing lunge with back foot on carriage', ARRAY['legs', 'glutes'], 1, 60, 'right');
 
   -- Lunge (Left)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, side)
-  VALUES (workout_id, ex_lunge, 2, 60, 'left');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, side)
+  VALUES (workout_id, ex_lunge, 'Lunge', 'Standing lunge with back foot on carriage', ARRAY['legs', 'glutes'], 2, 60, 'left');
 
   -- Core: Plank Hold
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, pulses)
-  VALUES (workout_id, ex_plank, 3, 45, 15, 10);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, notes)
+  VALUES (workout_id, ex_plank, 'Plank Hold', 'Hold a strong plank position', ARRAY['core'], 3, 45, 15, '10 pulses at end');
 
   -- Catfish
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec)
-  VALUES (workout_id, ex_catfish, 4, 60, 10);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds)
+  VALUES (workout_id, ex_catfish, 'Catfish', 'Supine with legs extended, lower and lift legs slowly', ARRAY['core', 'legs'], 4, 60, 10);
 
   -- Lower Body: Standing Lunge (Right)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, pulses, side)
-  VALUES (workout_id, ex_standing_lunge, 5, 60, 10, 20, 'right');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, side, notes)
+  VALUES (workout_id, ex_standing_lunge, 'Standing Lunge', 'Standing lunge variation', ARRAY['legs', 'glutes'], 5, 60, 10, 'right', '20 pulses');
 
   -- Standing Lunge (Left)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, pulses, side)
-  VALUES (workout_id, ex_standing_lunge, 6, 60, 10, 20, 'left');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, side, notes)
+  VALUES (workout_id, ex_standing_lunge, 'Standing Lunge', 'Standing lunge variation', ARRAY['legs', 'glutes'], 6, 60, 10, 'left', '20 pulses');
 
   -- Core: Wheelbarrow
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec)
-  VALUES (workout_id, ex_wheelbarrow, 7, 60);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds)
+  VALUES (workout_id, ex_wheelbarrow, 'Wheelbarrow', 'Plank with feet on carriage, move in and out', ARRAY['core', 'arms'], 7, 60);
 
   -- Bear
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec)
-  VALUES (workout_id, ex_bear, 8, 60, 15);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds)
+  VALUES (workout_id, ex_bear, 'Bear', 'Tabletop position with knees hovering, engage core deeply', ARRAY['core'], 8, 60, 15);
 
   -- Glutes: Donkey Kick (Right)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, pulses, side)
-  VALUES (workout_id, ex_donkey_kick, 9, 60, 30, 'right');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, side, notes)
+  VALUES (workout_id, ex_donkey_kick, 'Donkey Kick', 'On all fours, kick leg back and up', ARRAY['glutes', 'legs'], 9, 60, 'right', '30 pulses');
 
   -- Donkey Kick (Left)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, pulses, side)
-  VALUES (workout_id, ex_donkey_kick, 10, 60, 30, 'left');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, side, notes)
+  VALUES (workout_id, ex_donkey_kick, 'Donkey Kick', 'On all fours, kick leg back and up', ARRAY['glutes', 'legs'], 10, 60, 'left', '30 pulses');
 
   -- Upper Body: Tricep Press
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, pulses)
-  VALUES (workout_id, ex_tricep, 11, 45, 10, 15);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, notes)
+  VALUES (workout_id, ex_tricep, 'Tricep Press', 'Isolated tricep work', ARRAY['arms'], 11, 45, 10, '15 pulses');
 
   -- Bridge
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec)
-  VALUES (workout_id, ex_bridge, 12, 60, 15);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds)
+  VALUES (workout_id, ex_bridge, 'Bridge', 'Hip bridges for glutes', ARRAY['glutes', 'core'], 12, 60, 15);
 
   -- Wide Push Up
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, pulses)
-  VALUES (workout_id, ex_wide_pushup, 13, 45, 20);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, notes)
+  VALUES (workout_id, ex_wide_pushup, 'Wide Push Up', 'Wide grip push-up variation', ARRAY['chest', 'arms'], 13, 45, '20 pulses');
 
   -- Core Finish: Scrambled Eggs
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec)
-  VALUES (workout_id, ex_scrambled, 14, 60);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds)
+  VALUES (workout_id, ex_scrambled, 'Scrambled Eggs', 'Supine with legs in straps, small scissor movements', ARRAY['core', 'legs'], 14, 60);
 
   -- Obliques: Side Plank (Right)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, side)
-  VALUES (workout_id, ex_side_plank, 15, 45, 10, 'right');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, side)
+  VALUES (workout_id, ex_side_plank, 'Side Plank', 'Side plank for obliques', ARRAY['core', 'obliques'], 15, 45, 10, 'right');
 
   -- Side Plank (Left)
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec, hold_sec, side)
-  VALUES (workout_id, ex_side_plank, 16, 45, 10, 'left');
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds, holds, side)
+  VALUES (workout_id, ex_side_plank, 'Side Plank', 'Side plank for obliques', ARRAY['core', 'obliques'], 16, 45, 10, 'left');
 
   -- Cool Down: Pulling Straps
-  INSERT INTO workout_exercises (workout_id, exercise_id, position, time_sec)
-  VALUES (workout_id, ex_pulling, 17, 60);
+  INSERT INTO workout_exercises (workout_id, exercise_id, exercise_name, description, muscle_groups, sequence_order, time_seconds)
+  VALUES (workout_id, ex_pulling, 'Pulling Straps', 'Stretch and cool down', ARRAY['back', 'arms'], 17, 60);
 
 END $$;
