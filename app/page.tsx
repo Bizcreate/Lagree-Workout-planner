@@ -59,6 +59,37 @@ export default function Home() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="planner" className="mt-6">
+          <div className="flex justify-center mb-6">
+            <ToggleGroup
+              type="single"
+              value={plannerMode}
+              onValueChange={(value) => value && setPlannerMode(value as "detailed" | "quick")}
+            >
+              <ToggleGroupItem value="detailed" aria-label="Detailed Planner">
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Detailed Planner
+              </ToggleGroupItem>
+              <ToggleGroupItem value="quick" aria-label="Quick Picker">
+                <Lightning className="h-4 w-4 mr-2" />
+                Quick Picker
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          {plannerMode === "detailed" ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ExerciseLibrary />
+              <WorkoutPlanner />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <QuickWorkoutPicker />
+              <WorkoutPlanner />
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="my-workouts" className="mt-6">
           <MyWorkouts />
         </TabsContent>
