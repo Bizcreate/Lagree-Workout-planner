@@ -171,7 +171,7 @@ export function ClassMode() {
 
   return (
     <div className="w-full flex flex-col min-h-screen bg-background">
-      {/* Header */}
+      {/* Header with Mini Stopwatch */}
       <div className="flex items-center justify-between p-4 border-b bg-card">
         <div>
           <h1 className="font-semibold text-lg">Class Mode</h1>
@@ -179,7 +179,37 @@ export function ClassMode() {
             Exercise {currentIndex + 1} of {totalExercises}
           </p>
         </div>
+        
+        {/* Mini Stopwatch in Header */}
+        {showStopwatch && (
+          <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-4 py-2 border">
+            <Clock className="h-5 w-5 text-primary" />
+            <span className="font-mono text-lg font-bold min-w-[80px] text-center">
+              {formatTime(stopwatchTime)}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setStopwatchRunning(!stopwatchRunning)}
+            >
+              {stopwatchRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={resetStopwatch}>
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+        
         <div className="flex items-center gap-2">
+          <Button
+            variant={showStopwatch ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setShowStopwatch(!showStopwatch)}
+            title="Toggle stopwatch"
+          >
+            <Clock className="h-4 w-4 mr-1" />
+            Stopwatch
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -271,9 +301,21 @@ export function ClassMode() {
               </div>
 
               {/* Exercise Name */}
-              <h2 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              <h2 className="text-5xl md:text-7xl font-bold mb-4 leading-tight">
                 {currentExercise?.name}
               </h2>
+
+              {/* Exercise Duration */}
+              {currentExercise?.time_sec && (
+                <div className="mb-6">
+                  <Badge className="text-xl px-6 py-2 bg-primary text-primary-foreground">
+                    {currentExercise.time_sec < 60 
+                      ? `${currentExercise.time_sec} seconds`
+                      : `${(currentExercise.time_sec / 60).toFixed(1)} minutes`
+                    }
+                  </Badge>
+                </div>
+              )}
 
               {/* Description */}
               {currentExercise?.description && (
@@ -350,36 +392,6 @@ export function ClassMode() {
       {/* Bottom Controls */}
       <div className="border-t bg-card p-4">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
-          {/* Stopwatch Toggle & Display */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="stopwatch"
-                checked={showStopwatch}
-                onCheckedChange={setShowStopwatch}
-              />
-              <Label htmlFor="stopwatch" className="text-sm">Stopwatch</Label>
-            </div>
-            {showStopwatch && (
-              <Card className="flex items-center gap-3 px-4 py-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="font-mono text-xl font-bold min-w-[80px]">
-                  {formatTime(stopwatchTime)}
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setStopwatchRunning(!stopwatchRunning)}
-                >
-                  {stopwatchRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={resetStopwatch}>
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </Card>
-            )}
-          </div>
-
           {/* Navigation Controls */}
           <div className="flex items-center gap-2">
             <Button
