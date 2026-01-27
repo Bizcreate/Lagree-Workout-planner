@@ -2,14 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  CalendarIcon,
-  ClipboardList,
-  Dumbbell,
-  CloudLightningIcon as Lightning,
-  BookmarkIcon,
-  GraduationCap,
-} from "lucide-react"
+import { CalendarIcon, ClipboardList, Dumbbell, CloudLightning as Lightning, BookmarkIcon, GraduationCap } from "lucide-react"
 
 import { ExerciseLibrary } from "@/components/exercise-library"
 import { WorkoutPlanner } from "@/components/workout-planner"
@@ -18,6 +11,7 @@ import { NotesSection } from "@/components/notes-section"
 import { QuickWorkoutPicker } from "@/components/quick-workout-picker"
 import { MyWorkouts } from "@/components/my-workouts"
 import { InstructorResources } from "@/components/instructor-resources"
+import { ClassMode } from "@/components/class-mode"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -30,11 +24,16 @@ export default function Home() {
       <h1 className="text-3xl font-bold text-center mb-6">Lagree Workout Planner</h1>
 
       <Tabs defaultValue="planner" className="mb-6">
-        <TabsList className="grid w-full grid-cols-5 max-w-5xl mx-auto">
+        <TabsList className="grid w-full grid-cols-6 max-w-6xl mx-auto">
           <TabsTrigger value="planner" className="flex items-center gap-2">
             <Dumbbell className="h-4 w-4" />
-            <span className="hidden sm:inline">Workout Planner</span>
-            <span className="sm:hidden">Planner</span>
+            <span className="hidden sm:inline">Planner</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="class-mode" className="flex items-center gap-2">
+            <Lightning className="h-4 w-4" />
+            <span className="hidden sm:inline">Class Mode</span>
+            <span className="sm:hidden">Class</span>
           </TabsTrigger>
 
           <TabsTrigger value="my-workouts" className="flex items-center gap-2">
@@ -60,39 +59,12 @@ export default function Home() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="planner" className="mt-6">
-          <div className="flex justify-center mb-6">
-            <ToggleGroup
-              type="single"
-              value={plannerMode}
-              onValueChange={(value) => value && setPlannerMode(value as "detailed" | "quick")}
-            >
-              <ToggleGroupItem value="detailed" aria-label="Detailed Planner">
-                <Dumbbell className="h-4 w-4 mr-2" />
-                Detailed Planner
-              </ToggleGroupItem>
-              <ToggleGroupItem value="quick" aria-label="Quick Picker">
-                <Lightning className="h-4 w-4 mr-2" />
-                Quick Picker
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-
-          {plannerMode === "detailed" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ExerciseLibrary />
-              <WorkoutPlanner />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <QuickWorkoutPicker />
-              <WorkoutPlanner />
-            </div>
-          )}
-        </TabsContent>
-
         <TabsContent value="my-workouts" className="mt-6">
           <MyWorkouts />
+        </TabsContent>
+
+        <TabsContent value="class-mode" className="mt-6">
+          <ClassMode />
         </TabsContent>
 
         <TabsContent value="calendar" className="mt-6">
