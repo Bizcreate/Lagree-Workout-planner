@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useWorkoutStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { 
-  X, 
   Play, 
   Pause, 
   RotateCcw, 
@@ -21,28 +21,14 @@ import {
   Minimize2,
   SkipForward,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  AlertCircle,
+  X
 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-interface Exercise {
-  id: string
-  name: string
-  description?: string
-  muscleGroups?: string[]
-  time?: number
-  reps?: number
-  side?: string
-  notes?: string
-  isSpecialInstruction?: boolean
-}
-
-interface ClassModeProps {
-  exercises: Exercise[]
-  workoutName: string
-  onClose: () => void
-}
-
-export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
+export function ClassMode({ onClose, workoutName, exercises }) {
+  const { workoutPlan } = useWorkoutStore()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showStopwatch, setShowStopwatch] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0)
@@ -54,17 +40,19 @@ export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [showExerciseList, setShowExerciseList] = useState(false)
 
-  const currentExercise = exercises[currentIndex]
-  const nextExercise = exercises[currentIndex + 1]
-  const totalExercises = exercises.length
+  const currentExercise = workoutPlan[currentIndex]
+  const nextExercise = workoutPlan[currentIndex + 1]
+  const totalExercises = workoutPlan.length
 
   // Initialize timer when exercise changes
   useEffect(() => {
-    if (currentExercise?.time) {
-      setTimerTime(currentExercise.time)
+    if (currentExercise?.time_sec) {
+      setTimerTime(currentExercise.time_sec)
       setTimerRunning(false)
+    } else {
+      setTimerTime(60) // Default to 60 seconds
     }
-  }, [currentIndex, currentExercise?.time])
+  }, [currentIndex, currentExercise?.time_sec])
 
   // Stopwatch logic
   useEffect(() => {
@@ -137,8 +125,10 @@ export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
   }
 
   const resetTimer = () => {
-    if (currentExercise?.time) {
-      setTimerTime(currentExercise.time)
+    if (currentExercise?.time_sec) {
+      setTimerTime(currentExercise.time_sec)
+    } else {
+      setTimerTime(60)
     }
     setTimerRunning(false)
   }
@@ -166,26 +156,35 @@ export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
     }
   }
 
+  if (!workoutPlan || workoutPlan.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Alert className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No workout plan active. Please create or select a workout in the Planner tab to use Class Mode.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="w-full flex flex-col min-h-screen bg-background">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-card">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="font-semibold text-lg">{workoutName}</h1>
-            <p className="text-sm text-muted-foreground">
-              Exercise {currentIndex + 1} of {totalExercises}
-            </p>
-          </div>
+        <div>
+          <h1 className="font-semibold text-lg">Class Mode</h1>
+          <p className="text-sm text-muted-foreground">
+            Exercise {currentIndex + 1} of {totalExercises}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setVoiceEnabled(!voiceEnabled)}
+            title={voiceEnabled ? "Voice on" : "Voice off"}
           >
             {voiceEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </Button>
@@ -232,8 +231,8 @@ export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
                       {ex.name}
                     </span>
                   </div>
-                  {ex.time && (
-                    <span className="text-xs opacity-70 ml-8">{ex.time}s</span>
+              {currentExercise?.time_sec && (
+                    <span className="text-xs opacity-70 ml-8">{currentExercise.time_sec}s</span>
                   )}
                 </button>
               ))}
@@ -295,7 +294,7 @@ export function ClassMode({ exercises, workoutName, onClose }: ClassModeProps) {
               )}
 
               {/* Timer Display */}
-              {showTimer && currentExercise?.time && (
+              {showTimer && currentExercise?.time_sec && (
                 <Card className="inline-block p-8 mb-6">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wider">
