@@ -27,7 +27,7 @@ import {
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export function ClassMode({ onClose, workoutName, exercises }) {
+export function ClassMode() {
   const { workoutPlan } = useWorkoutStore()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showStopwatch, setShowStopwatch] = useState(false)
@@ -210,9 +210,9 @@ export function ClassMode({ onClose, workoutName, exercises }) {
               <h3 className="font-medium text-sm">Exercise List</h3>
             </div>
             <div className="p-2">
-              {exercises.map((ex, idx) => (
+              {workoutPlan?.map((ex, idx) => (
                 <button
-                  key={ex.id}
+                  key={ex.id || idx}
                   onClick={() => {
                     setCurrentIndex(idx)
                     setTimerRunning(false)
@@ -231,8 +231,8 @@ export function ClassMode({ onClose, workoutName, exercises }) {
                       {ex.name}
                     </span>
                   </div>
-              {currentExercise?.time_sec && (
-                    <span className="text-xs opacity-70 ml-8">{currentExercise.time_sec}s</span>
+                  {ex?.time_sec && (
+                    <span className="text-xs opacity-70 ml-8">{ex.time_sec}s</span>
                   )}
                 </button>
               ))}
