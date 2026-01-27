@@ -2,33 +2,27 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useWorkoutStore } from "@/lib/store"
+import { useSavedWorkoutsStore } from "@/lib/saved-workouts-store"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  ChevronUp, 
-  ChevronDown,
-  Timer,
-  Clock,
-  Volume2,
-  VolumeX,
-  Maximize2,
-  Minimize2,
-  SkipForward,
-  ArrowLeft,
-  ArrowRight,
-  AlertCircle,
-  X
-} from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Play, Pause, RotateCcw, ChevronUp, ChevronDown, Timer, Clock, Volume2, VolumeX, Maximize2, Minimize2, SkipForward, ArrowLeft, ArrowRight, AlertCircle, X, BookMarked as BookmarkOpen } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BookMarked } from "lucide-react" // Declare the BookMarked variable
 
 export function ClassMode() {
   const { workoutPlan } = useWorkoutStore()
+  const { savedWorkouts } = useSavedWorkoutsStore()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showStopwatch, setShowStopwatch] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0)
@@ -39,10 +33,12 @@ export function ClassMode() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [showExerciseList, setShowExerciseList] = useState(false)
+  const [showWorkoutSelector, setShowWorkoutSelector] = useState(false)
+  const [selectedWorkout, setSelectedWorkout] = useState(workoutPlan)
 
-  const currentExercise = workoutPlan[currentIndex]
-  const nextExercise = workoutPlan[currentIndex + 1]
-  const totalExercises = workoutPlan.length
+  const currentExercise = selectedWorkout?.[currentIndex]
+  const nextExercise = selectedWorkout?.[currentIndex + 1]
+  const totalExercises = selectedWorkout?.length || 0
 
   // Initialize timer when exercise changes
   useEffect(() => {
@@ -156,15 +152,57 @@ export function ClassMode() {
     }
   }
 
-  if (!workoutPlan || workoutPlan.length === 0) {
+  if (!selectedWorkout || selectedWorkout.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <Alert className="max-w-md">
+      <div className="w-full flex flex-col min-h-screen bg-background p-4">
+        <Alert className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            No workout plan active. Please create or select a workout in the Planner tab to use Class Mode.
+            No workout selected. Choose a workout to begin Class Mode.
           </AlertDescription>
         </Alert>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+          {/* Current Workout Plan */}
+          {workoutPlan && workoutPlan.length > 0 && (
+            <Card className="p-6 cursor-pointer hover:border-primary transition-colors" onClick={() => {
+              setSelectedWorkout(workoutPlan)
+              setCurrentIndex(0)
+            }}>
+              <h3 className="font-semibold mb-2">Current Plan</h3>
+              <p className="text-sm text-muted-foreground mb-4">{workoutPlan.length} exercises</p>
+              <Button size="sm" className="w-full">Start Class</Button>
+            </Card>
+          )}
+
+          {/* Saved Workouts */}
+          {savedWorkouts.map((workout) => (
+            <Card 
+              key={workout.id} 
+              className="p-6 cursor-pointer hover:border-primary transition-colors"
+              onClick={() => {
+                setSelectedWorkout(workout.exercises)
+                setCurrentIndex(0)
+              }}
+            >
+              <h3 className="font-semibold mb-2">{workout.name}</h3>
+              <p className="text-sm text-muted-foreground mb-2">{workout.exercises.length} exercises</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                {new Date(workout.createdAt).toLocaleDateString()}
+              </p>
+              <Button size="sm" className="w-full">Start Class</Button>
+            </Card>
+          ))}
+        </div>
+
+        {!workoutPlan && savedWorkouts.length === 0 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Create a workout in the Planner tab or select a saved workout to use Class Mode.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
     )
   }
@@ -201,6 +239,14 @@ export function ClassMode() {
         )}
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowWorkoutSelector(true)}
+          >
+            <BookmarkOpen className="h-4 w-4 mr-1" />
+            Switch Workout
+          </Button>
           <Button
             variant={showStopwatch ? "default" : "ghost"}
             size="sm"
@@ -424,6 +470,74 @@ export function ClassMode() {
           </div>
         </div>
       </div>
+
+      {/* Workout Selector Dialog */}
+      <Dialog open={showWorkoutSelector} onOpenChange={setShowWorkoutSelector}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Select Workout for Class Mode</DialogTitle>
+            <DialogDescription>
+              Choose a workout to begin teaching
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-3">
+              {/* Current Workout Plan */}
+              {workoutPlan && workoutPlan.length > 0 && (
+                <Card 
+                  className="p-4 cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => {
+                    setSelectedWorkout(workoutPlan)
+                    setCurrentIndex(0)
+                    setShowWorkoutSelector(false)
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">Current Plan</h3>
+                      <p className="text-sm text-muted-foreground">{workoutPlan.length} exercises</p>
+                    </div>
+                    <Badge variant="outline">Active</Badge>
+                  </div>
+                </Card>
+              )}
+
+              {/* Saved Workouts */}
+              {savedWorkouts.map((workout) => (
+                <Card 
+                  key={workout.id}
+                  className="p-4 cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => {
+                    setSelectedWorkout(workout.exercises)
+                    setCurrentIndex(0)
+                    setShowWorkoutSelector(false)
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{workout.name}</h3>
+                      <p className="text-sm text-muted-foreground">{workout.exercises.length} exercises</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(workout.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+
+              {!workoutPlan && savedWorkouts.length === 0 && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    No workouts available. Create one in the Planner tab.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
